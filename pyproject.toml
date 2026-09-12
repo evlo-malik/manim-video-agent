@@ -45,9 +45,6 @@ Issues = "https://github.com/evlo-malik/manim-video-agent/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/manim_video_agent"]
 
-[tool.hatch.build.targets.wheel.force-include]
-"src/manim_video_agent/data" = "manim_video_agent/data"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers --strict-config"
