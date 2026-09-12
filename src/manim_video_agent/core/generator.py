@@ -15,12 +15,16 @@ from typing import Optional
 
 from manim_video_agent.clients.openrouter import OpenRouterClient, OpenRouterConfig
 from manim_video_agent.config import get_settings
-from manim_video_agent.core.composer import ComposerConfig, ComposeRequest, VideoComposer
+from manim_video_agent.core.composer import (
+    ComposerConfig,
+    ComposeRequest,
+    VideoComposer,
+)
 from manim_video_agent.core.fixer import collect_code_errors
 from manim_video_agent.core.video_renderer import _fix_render_error
 from manim_video_agent.core.visual_reviewer import (
-    format_defect_report,
     fix_from_reports,
+    format_defect_report,
     print_review,
     render_lastframes,
     review_all_frames,
@@ -48,11 +52,11 @@ def _parse_overlap_reports(stdout: str) -> list[str]:
     """Extract [OVERLAP_DETECTED] lines from render stdout (deduplicated)."""
     if not stdout:
         return []
-    return list(dict.fromkeys(
-        line.strip()
-        for line in stdout.splitlines()
-        if "[OVERLAP_DETECTED]" in line
-    ))
+    return list(
+        dict.fromkeys(
+            line.strip() for line in stdout.splitlines() if "[OVERLAP_DETECTED]" in line
+        )
+    )
 
 
 def _format_overlap_report(overlap_lines: list[str]) -> str:
@@ -256,8 +260,7 @@ def generate_video(
         content, skill_block=skill_block, scene_plan=scene_plan
     )
 
-    # Phase 3: Collect code errors for unified fixer
-    code_errors = [] if skip_fixer else collect_code_errors(result.code)
+    # Phase 3: Run the unified visual and code review loop.
     fixed_code = result.code
 
     # Phase 4: Visual review loop (render → Gemini review → LLM fix)

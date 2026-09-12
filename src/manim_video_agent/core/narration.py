@@ -28,7 +28,11 @@ import requests
 
 from manim_video_agent.clients.tts import InworldTTSClient
 from manim_video_agent.config import get_settings
-from manim_video_agent.core.timing_parser import SceneTiming, parse_scene_timings, total_duration
+from manim_video_agent.core.timing_parser import (
+    SceneTiming,
+    parse_scene_timings,
+    total_duration,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -369,10 +373,12 @@ def generate_scene_narrations(
                 if i < len(segments):
                     seg = segments[i]
                     if isinstance(seg, dict) and "text" in seg:
-                        validated.append({
-                            "scene": timing.method_name,
-                            "text": seg["text"].strip(),
-                        })
+                        validated.append(
+                            {
+                                "scene": timing.method_name,
+                                "text": seg["text"].strip(),
+                            }
+                        )
                         logger.info(
                             "Positional map: segment %d ('%s') → %s",
                             i,
@@ -654,7 +660,10 @@ def inject_scene_waits(
     if not extensions:
         return code
 
-    from manim_video_agent.core.timing_parser import _extract_method_body, _get_construct_calls
+    from manim_video_agent.core.timing_parser import (
+        _extract_method_body,
+        _get_construct_calls,
+    )
 
     scene_methods = _get_construct_calls(code)
     result = code
@@ -676,7 +685,7 @@ def inject_scene_waits(
             if "self.clear_scene()" in body:
                 # Find the clear_scene() call within this method and insert before it
                 pattern = re.compile(
-                    rf"(^( +))(self\.clear_scene\(\))",
+                    r"(^( +))(self\.clear_scene\(\))",
                     re.MULTILINE,
                 )
                 new_body = pattern.sub(

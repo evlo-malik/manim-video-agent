@@ -188,11 +188,13 @@ def fix_file(filepath: str) -> list[tuple[int, str, str]]:
                     break
 
     if needs_import:
-        has_import = any("from manim_video_agent.manim.text_utils import" in l for l in lines)
+        has_import = any(
+            "from manim_video_agent.manim.text_utils import" in line for line in lines
+        )
         if not has_import:
             insert_at = 0
-            for j, l in enumerate(lines):
-                if "from manim import" in l or "import manim" in l:
+            for j, line in enumerate(lines):
+                if "from manim import" in line or "import manim" in line:
                     insert_at = j + 1
             import_line = "from manim_video_agent.manim.text_utils import latex_text\n"
             lines.insert(insert_at, import_line)

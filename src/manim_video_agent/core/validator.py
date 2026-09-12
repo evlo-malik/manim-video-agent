@@ -26,7 +26,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-
 # Manim default frame dimensions (from docs: 8 units tall, 16:9 ratio)
 FRAME_HEIGHT = 8.0
 FRAME_WIDTH = FRAME_HEIGHT * 16 / 9  # ~14.222
@@ -188,7 +187,7 @@ _CHAR_HEIGHT_PER_48 = 0.55
 
 def _est_text_width(text: str, font_size: int) -> float:
     lines = text.split("\\n") if "\\n" in text else text.split("\n")
-    longest = max(len(l) for l in lines)
+    longest = max(len(line) for line in lines)
     return longest * _CHAR_WIDTH_PER_48 * (font_size / 48)
 
 
@@ -204,7 +203,11 @@ def _est_text_height(text: str, font_size: int) -> float:
 
 def _get_str_arg(node: ast.Call) -> Optional[str]:
     """Get the first string argument from a Call node."""
-    if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
+    if (
+        node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    ):
         return node.args[0].value
     if node.args and isinstance(node.args[0], ast.JoinedStr):
         return "x" * 30  # f-string placeholder
@@ -238,24 +241,49 @@ def _get_func_name(node: ast.Call) -> Optional[str]:
 @dataclass
 class Block:
     """A bounding-box block representing a mobject."""
-    kind: str         # "text", "mathtex", "rect", "vgroup", etc.
+
+    kind: str  # "text", "mathtex", "rect", "vgroup", etc.
     est_width: float  # estimated width in manim units
     est_height: float  # estimated height in manim units
-    line: int         # source line
-    label: str = ""   # human-readable label
+    line: int  # source line
+    label: str = ""  # human-readable label
 
 
 # Numpy constants that are NOT Mobjects — calling Mobject methods on them crashes.
 _NUMPY_CONSTANTS = {
-    "ORIGIN", "UP", "DOWN", "LEFT", "RIGHT",
-    "UL", "UR", "DL", "DR", "IN", "OUT",
+    "ORIGIN",
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "UL",
+    "UR",
+    "DL",
+    "DR",
+    "IN",
+    "OUT",
 }
 # Mobject methods that should never be called on numpy arrays.
 _MOBJECT_METHODS = {
-    "shift", "scale", "move_to", "next_to", "to_edge", "to_corner",
-    "align_to", "set_color", "set_opacity", "rotate", "flip",
-    "stretch", "set_fill", "set_stroke", "animate", "add_updater",
-    "become", "match_width", "match_height",
+    "shift",
+    "scale",
+    "move_to",
+    "next_to",
+    "to_edge",
+    "to_corner",
+    "align_to",
+    "set_color",
+    "set_opacity",
+    "rotate",
+    "flip",
+    "stretch",
+    "set_fill",
+    "set_stroke",
+    "animate",
+    "add_updater",
+    "become",
+    "match_width",
+    "match_height",
 }
 
 _RECT_TYPES = {"RoundedRectangle", "Rectangle", "Square"}
@@ -273,16 +301,21 @@ def _block_from_call(node: ast.Call) -> Optional[Block]:
         w = _get_kwarg_num(node, "width")
         h = _get_kwarg_num(node, "height")
         if w is not None and h is not None:
-            return Block(kind="rect", est_width=w, est_height=h,
-                         line=node.lineno, label=name)
+            return Block(
+                kind="rect", est_width=w, est_height=h, line=node.lineno, label=name
+            )
 
     if name in _TEXT_TYPES:
         text = _get_str_arg(node)
         if text is not None:
             fs = _get_kwarg_num(node, "font_size") or 48
-            return Block(kind="text", est_width=_est_text_width(text, int(fs)),
-                         est_height=_est_text_height(text, int(fs)),
-                         line=node.lineno, label=f'"{text[:50]}"')
+            return Block(
+                kind="text",
+                est_width=_est_text_width(text, int(fs)),
+                est_height=_est_text_height(text, int(fs)),
+                line=node.lineno,
+                label=f'"{text[:50]}"',
+            )
 
     if name in _MATH_TYPES:
         text = _get_str_arg(node)
@@ -290,10 +323,13 @@ def _block_from_call(node: ast.Call) -> Optional[Block]:
             fs = _get_kwarg_num(node, "font_size") or 48
             visible = len(text.replace("\\", "").replace("{", "").replace("}", ""))
             effective = text
-            return Block(kind="mathtex",
-                         est_width=visible * _CHAR_WIDTH_PER_48 * (fs / 48) * 0.7,
-                         est_height=_est_text_height(effective, int(fs)),
-                         line=node.lineno, label=f'"{text[:50]}"')
+            return Block(
+                kind="mathtex",
+                est_width=visible * _CHAR_WIDTH_PER_48 * (fs / 48) * 0.7,
+                est_height=_est_text_height(effective, int(fs)),
+                line=node.lineno,
+                label=f'"{text[:50]}"',
+            )
 
     return None
 
@@ -310,11 +346,16 @@ class _SceneAnalyzer(ast.NodeVisitor):
         self.issues: list[ValidationIssue] = []
 
     def _issue(self, sev: Severity, msg: str, line: int, fix: str = "") -> None:
-        self.issues.append(ValidationIssue(
-            severity=sev, message=msg, line=line,
-            scene_name=self.scene_name, suggestion=fix,
-            code_snippet=_snippet(self.src, line),
-        ))
+        self.issues.append(
+            ValidationIssue(
+                severity=sev,
+                message=msg,
+                line=line,
+                scene_name=self.scene_name,
+                suggestion=fix,
+                code_snippet=_snippet(self.src, line),
+            )
+        )
 
     def visit_Call(self, node: ast.Call) -> None:
         name = _get_func_name(node)
@@ -430,12 +471,14 @@ class _SceneAnalyzer(ast.NodeVisitor):
         if name in _TEXT_TYPES:
             text = _get_str_arg(node)
             if text:
-                for text_line in (text.split("\\n") if "\\n" in text else text.split("\n")):
+                for text_line in (
+                    text.split("\\n") if "\\n" in text else text.split("\n")
+                ):
                     if len(text_line) > 80:
                         self._issue(
                             Severity.WARNING,
                             f"Line has {len(text_line)} chars (>80), "
-                            f"likely overflows: \"{text_line[:40]}...\"",
+                            f'likely overflows: "{text_line[:40]}..."',
                             node.lineno,
                             "Keep lines under ~60 characters",
                         )
@@ -451,10 +494,10 @@ class _SceneAnalyzer(ast.NodeVisitor):
         self._issue(
             Severity.ERROR,
             f"Text() contains Unicode symbols that render poorly: {symbols} "
-            f"in \"{text[:50]}\"",
+            f'in "{text[:50]}"',
             node.lineno,
             "Use latex_text() from manim_video_agent.manim.text_utils instead: "
-            f"latex_text(\"{text[:40]}...\", font_size=...)",
+            f'latex_text("{text[:40]}...", font_size=...)',
         )
 
     def _check_font_size(self, node: ast.Call, type_name: str) -> None:
@@ -547,12 +590,14 @@ def validate_source(source: str, filename: str = "<string>") -> list[ValidationI
     try:
         tree = ast.parse(source)
     except SyntaxError as e:
-        return [ValidationIssue(
-            severity=Severity.ERROR,
-            message=f"Syntax error: {e.msg}",
-            line=e.lineno or 0,
-            scene_name=filename,
-        )]
+        return [
+            ValidationIssue(
+                severity=Severity.ERROR,
+                message=f"Syntax error: {e.msg}",
+                line=e.lineno or 0,
+                scene_name=filename,
+            )
+        ]
 
     source_lines = source.splitlines()
     _set_parents(tree)
@@ -596,19 +641,27 @@ def validate_mobject_bounds(mobject, label: str = "") -> list[str]:
     warnings: list[str] = []
     name = label or type(mobject).__name__
     try:
-        r, l = mobject.get_right()[0], mobject.get_left()[0]
-        t, b = mobject.get_top()[1], mobject.get_bottom()[1]
+        right, left = mobject.get_right()[0], mobject.get_left()[0]
+        top, bottom = mobject.get_top()[1], mobject.get_bottom()[1]
     except Exception:
         return warnings
 
-    if r > HALF_WIDTH:
-        warnings.append(f"{name}: right edge ({r:.2f}) exceeds frame by {r - HALF_WIDTH:.2f}u")
-    if l < -HALF_WIDTH:
-        warnings.append(f"{name}: left edge ({l:.2f}) exceeds frame by {-HALF_WIDTH - l:.2f}u")
-    if t > HALF_HEIGHT:
-        warnings.append(f"{name}: top ({t:.2f}) exceeds frame by {t - HALF_HEIGHT:.2f}u")
-    if b < -HALF_HEIGHT:
-        warnings.append(f"{name}: bottom ({b:.2f}) exceeds frame by {-HALF_HEIGHT - b:.2f}u")
+    if right > HALF_WIDTH:
+        warnings.append(
+            f"{name}: right edge ({right:.2f}) exceeds frame by {right - HALF_WIDTH:.2f}u"
+        )
+    if left < -HALF_WIDTH:
+        warnings.append(
+            f"{name}: left edge ({left:.2f}) exceeds frame by {-HALF_WIDTH - left:.2f}u"
+        )
+    if top > HALF_HEIGHT:
+        warnings.append(
+            f"{name}: top ({top:.2f}) exceeds frame by {top - HALF_HEIGHT:.2f}u"
+        )
+    if bottom < -HALF_HEIGHT:
+        warnings.append(
+            f"{name}: bottom ({bottom:.2f}) exceeds frame by {-HALF_HEIGHT - bottom:.2f}u"
+        )
     return warnings
 
 
@@ -634,14 +687,19 @@ if __name__ == "__main__":
 
     from manim_video_agent.manim.text_utils import fix_file
 
-    parser = argparse.ArgumentParser(description="Validate Manim scenes for visual bugs")
+    parser = argparse.ArgumentParser(
+        description="Validate Manim scenes for visual bugs"
+    )
     parser.add_argument("files", nargs="+", help="Manim .py files to validate")
-    parser.add_argument("--fix", action="store_true",
-                        help="Auto-fix errors (Unicode symbols, etc.) in-place")
-    parser.add_argument("--errors-only", action="store_true",
-                        help="Only show errors, not warnings")
-    parser.add_argument("--no-code", action="store_true",
-                        help="Hide code snippets")
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Auto-fix errors (Unicode symbols, etc.) in-place",
+    )
+    parser.add_argument(
+        "--errors-only", action="store_true", help="Only show errors, not warnings"
+    )
+    parser.add_argument("--no-code", action="store_true", help="Hide code snippets")
     args = parser.parse_args()
 
     exit_code = 0

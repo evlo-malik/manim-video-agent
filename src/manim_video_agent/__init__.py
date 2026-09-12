@@ -18,7 +18,10 @@ def get_data_dir() -> Path:
     from manim_video_agent.config import get_settings
 
     settings = get_settings()
-    if settings.manim_video_agent_data_dir and settings.manim_video_agent_data_dir.is_dir():
+    if (
+        settings.manim_video_agent_data_dir
+        and settings.manim_video_agent_data_dir.is_dir()
+    ):
         return settings.manim_video_agent_data_dir
 
     pkg_dir = Path(__file__).resolve().parent

@@ -11,18 +11,19 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from manim_video_agent.config import get_settings
-from manim_video_agent.core.composer import ComposerConfig, ComposeRequest, VideoComposer
+from manim_video_agent.core.composer import (
+    ComposerConfig,
+    ComposeRequest,
+    VideoComposer,
+)
 from manim_video_agent.core.generator import _run_visual_review_loop, write_output_file
 from manim_video_agent.core.narration import (
     PreRenderNarrationResult,
-    _get_media_duration,
     compute_scene_extensions,
     generate_scene_narrations,
     inject_single_scene_wait,
-    run_post_render_merge,
     synthesize_scenes_with_durations,
 )
 from manim_video_agent.core.scene_generator import SceneCodeResult, generate_scene_code
