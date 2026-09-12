@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "manim-video-agent"
+version = "0.1.0"
+description = "An agentic pipeline that plans, generates, reviews, renders, and narrates Manim videos."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+authors = [{ name = "Malik Evloev" }]
+keywords = ["manim", "video-generation", "animation", "llm", "tts"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "httpx>=0.27,<1",
+  "manim>=0.19,<1",
+  "pydantic>=2.9,<3",
+  "pydantic-settings>=2.5,<3",
+  "requests>=2.32,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.15,<2",
+  "pytest>=8.3,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+]
+
+[project.scripts]
+manim-video-agent = "manim_video_agent.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/evlo-malik/manim-video-agent"
+Issues = "https://github.com/evlo-malik/manim-video-agent/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/manim_video_agent"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/manim_video_agent/data" = "manim_video_agent/data"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501", "F403", "F405"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+warn_unused_ignores = true
+exclude = ["src/manim_video_agent/data/"]
